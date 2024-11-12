@@ -14,7 +14,7 @@ export default function CardEditorScreen({ navigation }) {
     </View>
   );
 }
-
+// styles //
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, justifyContent: 'space-between' },
 });
