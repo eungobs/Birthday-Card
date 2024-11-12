@@ -33,7 +33,7 @@ export default function CardEditorScreen({ navigation, route }) {
     await AsyncStorage.setItem('birthdayCards', JSON.stringify(updatedCards));
     navigation.goBack();
   };
-
+//  //
   return (
     <View style={styles.container}>
       <TextInput
