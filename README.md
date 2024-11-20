@@ -1,50 +1,100 @@
-# Welcome to your Expo app 👋
+Birthday Card Creator
+This React Native project enables users to design personalized birthday cards with custom text, photo uploads, and a golden-themed design. The application is available for web and mobile platforms and provides persistent storage for user inputs.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Features
+Editable Text
+Title: Editable text at the top of the card.
+Bottom Text: Editable text at the bottom of the card.
+Text changes are saved locally for session persistence.
+Photo Upload
+Users can upload and display a photo from their gallery within a decorative frame.
+Custom Design
+A sleek golden theme with an elegant logo (by.ee ndzukule) in a circular frame.
+Persistent Storage
+Card customizations (photo, title, bottom text) are saved using AsyncStorage to ensure changes are retained.
+Multi-Platform Support
+Compatible with web, Android, and iOS platforms.
+The app can be run in a browser or scanned for use on mobile devices via the Expo app.
+How to Use
+Editing Text
+Edit Title:
+Tap on the title (Happy Birthday) at the top of the card.
+Type your desired text. The app automatically saves and displays the update.
+Edit Bottom Text:
+Tap on the bottom text (Your Text Here) at the bottom of the card.
+Type your desired text. The app saves and displays the update instantly.
+Adding a Photo
+Tap on the photo frame in the middle of the card.
+Select an image from your device gallery.
+The selected image will appear in the frame.
+Running the App
+Run on the web:
+arduino
+Copy code
+npm run web
+Alternatively, start the project:
+sql
+Copy code
+npm start
+Open the Expo Developer Tools in your browser and scan the QR code using the Expo Go app for Android/iOS devices.
+Installation and Setup
+Clone the Repository
+To get the project, clone it from GitHub:
 
-## Get started
+bash
+Copy code
+git clone https://github.com/eungobs/Birthday-Card.git
+cd Birthday-Card
+Install Dependencies
+Install the blank Expo template:
+lua
+Copy code
+npx create-expo-app card --template blank
+Install required dependencies:
+AsyncStorage:
+swift
+Copy code
+npx expo install @react-native-async-storage/async-storage
+Image Picker:
+arduino
+Copy code
+npx expo install react-native-image-picker
+Start the Project
+For the web:
+arduino
+Copy code
+npm run web
+For mobile devices:
+Start the project:
+sql
+Copy code
+npm start
+Scan the QR code displayed in the Expo Developer Tools using the Expo Go app.
+Dependencies
+The project is built with the following key libraries:
 
-1. Install dependencies
+React Native: Core framework for building the app.
+Expo: Tools and APIs for running the app.
+@react-native-async-storage/async-storage: Manages local data storage for user inputs.
+react-native-image-picker: Facilitates photo selection from the user's gallery.
+Troubleshooting
+Image Picker Not Working:
 
-   ```bash
-   npm install
-   ```
+Ensure react-native-image-picker is installed:
+arduino
+Copy code
+npx expo install react-native-image-picker
+Grant necessary permissions for gallery access.
+Persistent Storage Issues:
 
-2. Start the app
+Verify that @react-native-async-storage/async-storage is correctly installed:
+swift
+Copy code
+npx expo install @react-native-async-storage/async-storage
+Expo Go Issues:
 
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Ensure both your phone and computer are on the same Wi-Fi network to scan the QR code.
+Author
+Designed and implemented by Elizabeth Eunice Ndzukule.
+For any questions or contributions, please visit the GitHub repository:
+Birthday Card GitHub Repository
