@@ -97,4 +97,8 @@ Ensure both your phone and computer are on the same Wi-Fi network to scan the QR
 Author
 Designed and implemented by Elizabeth Eunice Ndzukule.
 For any questions or contributions, please visit the GitHub repository:
+<<<<<<< HEAD
 Birthday Card GitHub Repository
+=======
+Birthday Card GitHub Repository
+>>>>>>> f76c3a181002f3e63f239f128bf043d8a1a88316
