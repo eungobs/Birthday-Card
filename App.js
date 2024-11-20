@@ -15,6 +15,8 @@ export default function BirthdayCard() {
   const [photo, setPhoto] = useState(null);
   const [title, setTitle] = useState('Happy Birthday');
   const [bottomText, setBottomText] = useState('Your Text Here');
+  const [backgroundColor, setBackgroundColor] = useState('#000');
+  const [fontFamily, setFontFamily] = useState('Arial'); // State for font family
 
   // Load saved data (photo, title, bottom text) from local storage
   useEffect(() => {
@@ -22,10 +24,12 @@ export default function BirthdayCard() {
       const savedPhoto = await AsyncStorage.getItem('photo');
       const savedTitle = await AsyncStorage.getItem('title');
       const savedBottomText = await AsyncStorage.getItem('bottomText');
+      const savedFontFamily = await AsyncStorage.getItem('fontFamily');
 
       if (savedPhoto) setPhoto(savedPhoto);
       if (savedTitle) setTitle(savedTitle);
       if (savedBottomText) setBottomText(savedBottomText);
+      if (savedFontFamily) setFontFamily(savedFontFamily);
     };
     loadData();
   }, []);
@@ -53,22 +57,28 @@ export default function BirthdayCard() {
     });
   };
 
+  // Function to change background color
+  const changeBackgroundColor = (color) => {
+    setBackgroundColor(color);
+  };
+
+  // Function to change font family
+  const changeFontFamily = (font) => {
+    setFontFamily(font);
+    saveData('fontFamily', font);
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor }]}>
       {/* Editable Title */}
       <TextInput
-        style={styles.title}
+        style={[styles.title, { fontFamily }]}
         value={title}
         onChangeText={(text) => {
           setTitle(text);
           saveData('title', text);
         }}
       />
-      
-      {/* Logo */}
-      <View style={styles.logoContainer}>
-        <Text style={styles.logoText}>by.ee ndzukule</Text>
-      </View>
 
       {/* Photo Frame */}
       <TouchableOpacity style={styles.photoFrame} onPress={selectPhoto}>
@@ -81,13 +91,40 @@ export default function BirthdayCard() {
 
       {/* Editable Bottom Text */}
       <TextInput
-        style={styles.bottomRectangle}
+        style={[styles.bottomRectangle, { fontFamily }]}
         value={bottomText}
         onChangeText={(text) => {
           setBottomText(text);
           saveData('bottomText', text);
         }}
       />
+
+      {/* Color Changing Buttons */}
+      <View style={styles.colorButtonsContainer}>
+        {[
+          '#FF6347', '#7FFF00', '#D2691E', '#00BFFF', '#8A2BE2', '#FF1493', 
+          '#808080', '#000000',
+        ].map((color, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[styles.colorButton, { backgroundColor: color }]}
+            onPress={() => changeBackgroundColor(color)}
+          />
+        ))}
+      </View>
+
+      {/* Font Selection Buttons */}
+      <View style={styles.fontButtonsContainer}>
+        {['Arial', 'Courier', 'Georgia', 'Times New Roman', 'Verdana'].map((font, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[styles.fontButton, { backgroundColor: '#222' }]}
+            onPress={() => changeFontFamily(font)}
+          >
+            <Text style={[styles.fontButtonText, { fontFamily: font }]}>{font}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 }
@@ -95,9 +132,9 @@ export default function BirthdayCard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
     alignItems: 'center',
     padding: 20,
+    justifyContent: 'center',
   },
   title: {
     fontSize: 30,
@@ -109,20 +146,6 @@ const styles = StyleSheet.create({
     borderBottomColor: 'gold',
     paddingHorizontal: 10,
   },
-  logoContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 40,
-    borderWidth: 3,
-    borderColor: 'gold',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  logoText: {
-    color: 'gold',
-    fontSize: 8,
-  },
   photoFrame: {
     width: 250,
     height: 300,
@@ -133,6 +156,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#222',
     borderRadius: 10,
     overflow: 'hidden',
+    marginTop: 20,
   },
   photo: {
     width: '100%',
@@ -154,5 +178,32 @@ const styles = StyleSheet.create({
     marginTop: 30,
     paddingHorizontal: 10,
   },
+  colorButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 30,
+  },
+  colorButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    margin: 5,
+  },
+  fontButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 30,
+  },
+  fontButton: {
+    width: 70,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 5,
+    borderRadius: 10,
+  },
+  fontButtonText: {
+    color: 'white',
+    fontSize: 10,
+  },
 });
- 
