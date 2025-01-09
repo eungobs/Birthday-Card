@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, Alert, Share, Platform } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import * as Sharing from 'expo-sharing';
 
 export default function BirthdayCard() {
   const [photo, setPhoto] = useState(null);
@@ -10,49 +10,98 @@ export default function BirthdayCard() {
   const [backgroundColor, setBackgroundColor] = useState('#000');
   const [fontFamily, setFontFamily] = useState('Arial');
 
+  // Load data when component mounts
   useEffect(() => {
-    const loadData = async () => {
-      const savedPhoto = await AsyncStorage.getItem('photo');
-      const savedTitle = await AsyncStorage.getItem('title');
-      const savedBottomText = await AsyncStorage.getItem('bottomText');
-      const savedFontFamily = await AsyncStorage.getItem('fontFamily');
-
-      if (savedPhoto) setPhoto(savedPhoto);
-      if (savedTitle) setTitle(savedTitle);
-      if (savedBottomText) setBottomText(savedBottomText);
-      if (savedFontFamily) setFontFamily(savedFontFamily);
-    };
-    loadData();
+    try {
+      const savedData = window.localStorage.getItem('birthdayCardData');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        setPhoto(parsedData.photo);
+        setTitle(parsedData.title || 'Happy Birthday');
+        setBottomText(parsedData.bottomText || 'Your Text Here');
+        setBackgroundColor(parsedData.backgroundColor || '#000');
+        setFontFamily(parsedData.fontFamily || 'Arial');
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
   }, []);
 
-  const saveData = async (key, value) => {
+  // Save data whenever any state changes
+  useEffect(() => {
     try {
-      await AsyncStorage.setItem(key, value);
+      const dataToSave = {
+        photo,
+        title,
+        bottomText,
+        backgroundColor,
+        fontFamily
+      };
+      window.localStorage.setItem('birthdayCardData', JSON.stringify(dataToSave));
     } catch (error) {
-      Alert.alert('Error', 'Failed to save data.');
+      console.error('Error saving data:', error);
     }
-  };
+  }, [photo, title, bottomText, backgroundColor, fontFamily]);
 
-  const selectPhoto = () => {
-    launchImageLibrary({ mediaType: 'photo' }, (response) => {
+  const selectPhoto = async () => {
+    const options = {
+      mediaType: 'photo',
+      quality: 1,
+      includeBase64: true,
+    };
+
+    try {
+      const response = await launchImageLibrary(options);
+      
       if (response.didCancel) return;
+
       if (response.errorCode) {
         Alert.alert('Error', response.errorMessage);
         return;
       }
-      const uri = response.assets[0]?.uri;
-      setPhoto(uri);
-      saveData('photo', uri);
-    });
+
+      if (response.assets && response.assets[0]) {
+        const selectedImage = response.assets[0];
+        setPhoto({
+          uri: selectedImage.uri,
+          base64: selectedImage.base64
+        });
+      }
+    } catch (error) {
+      console.error('Photo selection error:', error);
+      Alert.alert('Error', 'Failed to select photo');
+    }
   };
 
-  const changeBackgroundColor = (color) => {
-    setBackgroundColor(color);
+  const shareToWhatsApp = async () => {
+    try {
+      const message = `${title}\n${bottomText}`;
+      
+      if (Platform.OS === 'web') {
+        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+      } else {
+        const shareOptions = {
+          message: message,
+          social: Share.Social.WHATSAPP
+        };
+        
+        const result = await Share.shareSingle(shareOptions);
+        
+        if (result.action === Share.sharedAction) {
+          Alert.alert('Success', 'Shared successfully');
+        }
+      }
+    } catch (error) {
+      console.error('Share error:', error);
+      Alert.alert('Error', 'Make sure WhatsApp is installed');
+    }
   };
 
-  const changeFontFamily = (font) => {
-    setFontFamily(font);
-    saveData('fontFamily', font);
+  const renderImage = () => {
+    if (!photo) {
+      return <Text style={styles.photoText}>Tap to add photo</Text>;
+    }
+    return <Image source={{ uri: photo.uri }} style={styles.photo} />;
   };
 
   return (
@@ -60,26 +109,26 @@ export default function BirthdayCard() {
       <TextInput
         style={[styles.title, { fontFamily }]}
         value={title}
-        onChangeText={(text) => {
-          setTitle(text);
-          saveData('title', text);
-        }}
+        onChangeText={setTitle}
+        placeholder="Enter title"
+        placeholderTextColor="rgba(255, 215, 0, 0.5)"
       />
       <TouchableOpacity style={styles.photoFrame} onPress={selectPhoto}>
-        {photo ? (
-          <Image source={{ uri: photo }} style={styles.photo} />
-        ) : (
-          <Text style={styles.photoText}>Photo</Text>
-        )}
+        {renderImage()}
       </TouchableOpacity>
       <TextInput
         style={[styles.bottomRectangle, { fontFamily }]}
         value={bottomText}
-        onChangeText={(text) => {
-          setBottomText(text);
-          saveData('bottomText', text);
-        }}
+        onChangeText={setBottomText}
+        placeholder="Enter message"
+        placeholderTextColor="rgba(255, 215, 0, 0.5)"
       />
+      <TouchableOpacity 
+        style={styles.shareButton} 
+        onPress={shareToWhatsApp}
+      >
+        <Text style={styles.shareButtonText}>Share on WhatsApp</Text>
+      </TouchableOpacity>
       <View style={styles.colorButtonsContainer}>
         {[
           '#FF6347', '#7FFF00', '#D2691E', '#00BFFF', '#8A2BE2', '#FF1493',
@@ -88,7 +137,7 @@ export default function BirthdayCard() {
           <TouchableOpacity
             key={index}
             style={[styles.colorButton, { backgroundColor: color }]}
-            onPress={() => changeBackgroundColor(color)}
+            onPress={() => setBackgroundColor(color)}
           />
         ))}
       </View>
@@ -97,7 +146,7 @@ export default function BirthdayCard() {
           <TouchableOpacity
             key={index}
             style={[styles.fontButton, { backgroundColor: '#222' }]}
-            onPress={() => changeFontFamily(font)}
+            onPress={() => setFontFamily(font)}
           >
             <Text style={[styles.fontButtonText, { fontFamily: font }]}>{font}</Text>
           </TouchableOpacity>
@@ -113,6 +162,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     justifyContent: 'center',
+    minHeight: '100vh',
   },
   title: {
     fontSize: 30,
@@ -123,6 +173,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'gold',
     paddingHorizontal: 10,
+    width: '90%',
+    maxWidth: 400,
   },
   photoFrame: {
     width: 250,
@@ -135,6 +187,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: 'hidden',
     marginTop: 20,
+    cursor: 'pointer',
   },
   photo: {
     width: '100%',
@@ -147,6 +200,7 @@ const styles = StyleSheet.create({
   },
   bottomRectangle: {
     width: '90%',
+    maxWidth: 400,
     height: 50,
     borderWidth: 2,
     borderColor: 'gold',
@@ -155,33 +209,61 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 30,
     paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  shareButton: {
+    backgroundColor: '#25D366', // WhatsApp green
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 20,
+    width: '90%',
+    maxWidth: 400,
+  },
+  shareButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   colorButtonsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
     marginTop: 30,
+    width: '90%',
+    maxWidth: 400,
   },
   colorButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 35,
+    height: 35,
+    borderRadius: 18,
     margin: 5,
+    borderWidth: 2,
+    borderColor: '#fff',
+    cursor: 'pointer',
   },
   fontButtonsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    marginTop: 30,
+    marginTop: 20,
+    width: '90%',
+    maxWidth: 400,
   },
   fontButton: {
-    width: 70,
-    height: 50,
+    width: 80,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     margin: 5,
-    borderRadius: 10,
+    borderRadius: 8,
+    backgroundColor: '#222',
+    borderWidth: 1,
+    borderColor: 'gold',
+    cursor: 'pointer',
   },
   fontButtonText: {
-    color: 'white',
-    fontSize: 10,
+    color: 'gold',
+    fontSize: 12,
   },
 });
