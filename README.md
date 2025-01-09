@@ -33,41 +33,37 @@ arduino
 Copy code
 npm run web
 Alternatively, start the project:
-sql
-Copy code
+
 npm start
 Open the Expo Developer Tools in your browser and scan the QR code using the Expo Go app for Android/iOS devices.
 Installation and Setup
 Clone the Repository
 To get the project, clone it from GitHub:
 
-bash
-Copy code
+
 git clone https://github.com/eungobs/Birthday-Card.git
 cd Birthday-Card
 Install Dependencies
 Install the blank Expo template:
-lua
-Copy code
+
 npx create-expo-app card --template blank
 Install required dependencies:
 AsyncStorage:
-swift
-Copy code
+
 npx expo install @react-native-async-storage/async-storage
 Image Picker:
 arduino
-Copy code
+
 npx expo install react-native-image-picker
 Start the Project
 For the web:
 arduino
-Copy code
+
 npm run web
 For mobile devices:
 Start the project:
 sql
-Copy code
+
 npm start
 Scan the QR code displayed in the Expo Developer Tools using the Expo Go app.
 Dependencies
@@ -81,15 +77,14 @@ Troubleshooting
 Image Picker Not Working:
 
 Ensure react-native-image-picker is installed:
-arduino
-Copy code
+
+
 npx expo install react-native-image-picker
 Grant necessary permissions for gallery access.
 Persistent Storage Issues:
 
 Verify that @react-native-async-storage/async-storage is correctly installed:
-swift
-Copy code
+
 npx expo install @react-native-async-storage/async-storage
 Expo Go Issues:
 
@@ -97,8 +92,8 @@ Ensure both your phone and computer are on the same Wi-Fi network to scan the QR
 Author
 Designed and implemented by Elizabeth Eunice Ndzukule.
 For any questions or contributions, please visit the GitHub repository:
-<<<<<<< HEAD
+
 Birthday Card GitHub Repository
-=======
+
 Birthday Card GitHub Repository
->>>>>>> f76c3a181002f3e63f239f128bf043d8a1a88316
+
