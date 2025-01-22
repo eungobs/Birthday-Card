@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ScrollView,
+  Dimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -16,52 +18,34 @@ export default function BirthdayCard() {
   const [title, setTitle] = useState('Happy Birthday');
   const [bottomText, setBottomText] = useState('Your Text Here');
   const [backgroundColor, setBackgroundColor] = useState('#000');
-  const [fontFamily, setFontFamily] = useState('Arial'); // State for font family
-  const [savedCard, setSavedCard] = useState(null); // State to hold the saved card
+  const [fontFamily, setFontFamily] = useState('Arial');
+  const [savedCards, setSavedCards] = useState([]);
+  const [editingCard, setEditingCard] = useState(null);
 
-  // Load saved data (photo, title, bottom text) from local storage
   useEffect(() => {
-    const loadData = async () => {
-      const savedPhoto = await AsyncStorage.getItem('photo');
-      const savedTitle = await AsyncStorage.getItem('title');
-      const savedBottomText = await AsyncStorage.getItem('bottomText');
-      const savedFontFamily = await AsyncStorage.getItem('fontFamily');
-      const savedBackgroundColor = await AsyncStorage.getItem('backgroundColor');
-
-      if (savedPhoto) setPhoto(savedPhoto);
-      if (savedTitle) setTitle(savedTitle);
-      if (savedBottomText) setBottomText(savedBottomText);
-      if (savedFontFamily) setFontFamily(savedFontFamily);
-      if (savedBackgroundColor) setBackgroundColor(savedBackgroundColor);
+    const loadSavedCards = async () => {
+      try {
+        const savedCardsString = await AsyncStorage.getItem('savedCards');
+        if (savedCardsString) {
+          setSavedCards(JSON.parse(savedCardsString));
+        }
+      } catch (error) {
+        Alert.alert('Error', 'Failed to load saved cards');
+      }
     };
-    loadData();
+    loadSavedCards();
   }, []);
 
-  // Save data to local storage and show popup message
-  const saveData = async () => {
-    try {
-      await AsyncStorage.setItem('photo', photo || ''); // Ensure photo is saved as an empty string if null
-      await AsyncStorage.setItem('title', title);
-      await AsyncStorage.setItem('bottomText', bottomText);
-      await AsyncStorage.setItem('fontFamily', fontFamily);
-      await AsyncStorage.setItem('backgroundColor', backgroundColor);
-      
-      Alert.alert('Success', 'Card saved successfully!');
-      
-      // Update saved card state to show it on the left corner
-      setSavedCard({
-        photo: photo,
-        title: title,
-        bottomText: bottomText,
-        backgroundColor: backgroundColor,
-        fontFamily: fontFamily,
-      });
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save data.');
+  useEffect(() => {
+    if (editingCard) {
+      setPhoto(editingCard.photo);
+      setTitle(editingCard.title);
+      setBottomText(editingCard.bottomText);
+      setBackgroundColor(editingCard.backgroundColor);
+      setFontFamily(editingCard.fontFamily);
     }
-  };
+  }, [editingCard]);
 
-  // Select photo from gallery
   const selectPhoto = () => {
     launchImageLibrary({ mediaType: 'photo' }, (response) => {
       if (response.didCancel) return;
@@ -74,116 +58,192 @@ export default function BirthdayCard() {
     });
   };
 
-  // Function to change background color
-  const changeBackgroundColor = (color) => {
-    setBackgroundColor(color);
+  const saveData = async () => {
+    try {
+      const newCard = {
+        id: editingCard ? editingCard.id : Date.now().toString(),
+        photo,
+        title,
+        bottomText,
+        backgroundColor,
+        fontFamily,
+      };
+
+      let updatedCards;
+      if (editingCard) {
+        updatedCards = savedCards.map(card => 
+          card.id === editingCard.id ? newCard : card
+        );
+      } else {
+        updatedCards = [...savedCards, newCard];
+      }
+
+      await AsyncStorage.setItem('savedCards', JSON.stringify(updatedCards));
+      setSavedCards(updatedCards);
+      setEditingCard(null);
+      
+      // Reset form
+      setPhoto(null);
+      setTitle('Happy Birthday');
+      setBottomText('Your Text Here');
+      setBackgroundColor('#000');
+      setFontFamily('Arial');
+      
+      Alert.alert('Success', 'Card saved successfully!');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save card');
+    }
   };
 
-  // Function to change font family
-  const changeFontFamily = (font) => {
-    setFontFamily(font);
+  const handleEditCard = (card) => {
+    setEditingCard(card);
   };
+
+  const handleDeleteCard = async (cardId) => {
+    try {
+      const updatedCards = savedCards.filter(card => card.id !== cardId);
+      await AsyncStorage.setItem('savedCards', JSON.stringify(updatedCards));
+      setSavedCards(updatedCards);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to delete card');
+    }
+  };
+
+  const SavedCardComponent = ({ card }) => (
+    <View style={[styles.savedCard, { backgroundColor: card.backgroundColor }]}>
+      <Text style={[styles.savedTitle, { fontFamily: card.fontFamily }]}>
+        {card.title}
+      </Text>
+      {card.photo && (
+        <Image source={{ uri: card.photo }} style={styles.savedPhoto} />
+      )}
+      <Text style={[styles.savedBottomText, { fontFamily: card.fontFamily }]}>
+        {card.bottomText}
+      </Text>
+      <View style={styles.cardButtons}>
+        <TouchableOpacity 
+          style={styles.editButton} 
+          onPress={() => handleEditCard(card)}
+        >
+          <Text style={styles.editButtonText}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.deleteButton} 
+          onPress={() => handleDeleteCard(card.id)}
+        >
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
-      {/* Editable Title */}
-      <TextInput
-        style={[styles.title, { fontFamily }]}
-        value={title}
-        onChangeText={(text) => setTitle(text)}
-      />
+    <ScrollView style={styles.mainContainer}>
+      <View style={[styles.container, { backgroundColor }]}>
+        <TextInput
+          style={[styles.title, { fontFamily }]}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="Enter Title"
+          placeholderTextColor="rgba(255,215,0,0.5)"
+        />
 
-      {/* Photo Frame */}
-      <TouchableOpacity style={styles.photoFrame} onPress={selectPhoto}>
-        {photo ? (
-          <Image source={{ uri: photo }} style={styles.photo} />
-        ) : (
-          <Text style={styles.photoText}>Photo</Text>
-        )}
-      </TouchableOpacity>
-
-      {/* Editable Bottom Text */}
-      <TextInput
-        style={[styles.bottomRectangle, { fontFamily }]}
-        value={bottomText}
-        onChangeText={(text) => setBottomText(text)}
-      />
-
-      {/* Color Changing Buttons */}
-      <View style={styles.colorButtonsContainer}>
-        {[
-          '#FF6347', '#7FFF00', '#D2691E', '#00BFFF', '#8A2BE2', '#FF1493',
-          '#808080', '#000000',
-        ].map((color, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.colorButton, { backgroundColor: color }]}
-            onPress={() => changeBackgroundColor(color)}
-          />
-        ))}
-      </View>
-
-      {/* Font Selection Buttons */}
-      <View style={styles.fontButtonsContainer}>
-        {['Arial', 'Courier', 'Georgia', 'Times New Roman', 'Verdana'].map((font, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.fontButton, { backgroundColor: '#222' }]}
-            onPress={() => changeFontFamily(font)}
-          >
-            <Text style={[styles.fontButtonText, { fontFamily: font }]}>{font}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Save Button */}
-      <TouchableOpacity style={styles.saveButton} onPress={saveData}>
-        <Text style={styles.saveButtonText}>Save</Text>
-      </TouchableOpacity>
-
-      {/* Small Link Button */}
-      <TouchableOpacity style={styles.linkButton} onPress={() => Alert.alert('Link clicked!')}>
-        <Text style={styles.linkText}>Click Here</Text>
-      </TouchableOpacity>
-
-      {/* Display Saved Card on the left corner */}
-      {savedCard && (
-        <View style={[styles.savedCard, { backgroundColor: savedCard.backgroundColor }]}>
-          <Text style={[styles.savedTitle, { fontFamily: savedCard.fontFamily }]}>
-            {savedCard.title}
-          </Text>
-          {savedCard.photo && (
-            <Image source={{ uri: savedCard.photo }} style={styles.savedPhoto} />
+        <TouchableOpacity style={styles.photoFrame} onPress={selectPhoto}>
+          {photo ? (
+            <Image source={{ uri: photo }} style={styles.photo} />
+          ) : (
+            <Text style={styles.photoText}>Tap to add photo</Text>
           )}
-          <Text style={[styles.savedBottomText, { fontFamily: savedCard.fontFamily }]}>
-            {savedCard.bottomText}
-          </Text>
+        </TouchableOpacity>
+
+        <TextInput
+          style={[styles.bottomRectangle, { fontFamily }]}
+          value={bottomText}
+          onChangeText={setBottomText}
+          placeholder="Enter bottom text"
+          placeholderTextColor="rgba(255,215,0,0.5)"
+        />
+
+        <View style={styles.colorButtonsContainer}>
+          {[
+            '#FF6347', '#7FFF00', '#D2691E', '#00BFFF', '#8A2BE2',
+            '#FF1493', '#808080', '#000000',
+          ].map((color, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.colorButton, { backgroundColor: color }]}
+              onPress={() => setBackgroundColor(color)}
+            />
+          ))}
         </View>
-      )}
-    </View>
+
+        <View style={styles.fontButtonsContainer}>
+          {['Arial', 'Courier', 'Georgia', 'Times New Roman', 'Verdana'].map((font, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.fontButton, { backgroundColor: '#222' }]}
+              onPress={() => setFontFamily(font)}
+            >
+              <Text style={[styles.fontButtonText, { fontFamily: font }]}>{font}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <TouchableOpacity 
+          style={styles.saveButton} 
+          onPress={saveData}
+        >
+          <Text style={styles.saveButtonText}>
+            {editingCard ? 'Update Card' : 'Save New Card'}
+          </Text>
+        </TouchableOpacity>
+
+        {editingCard && (
+          <TouchableOpacity 
+            style={styles.cancelButton} 
+            onPress={() => setEditingCard(null)}
+          >
+            <Text style={styles.cancelButtonText}>Cancel Edit</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <View style={styles.savedCardsContainer}>
+        <Text style={styles.savedCardsTitle}>Saved Cards</Text>
+        {savedCards.map((card) => (
+          <SavedCardComponent key={card.id} card={card} />
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
+const { width } = Dimensions.get('window');
+const cardWidth = width * 0.9;
+
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  container: {
     alignItems: 'center',
     padding: 20,
-    justifyContent: 'center',
   },
   title: {
-    fontSize: 30,
+    fontSize: 28,
     color: 'gold',
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 20,
+    marginVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: 'gold',
     paddingHorizontal: 10,
+    width: '100%',
   },
   photoFrame: {
-    width: 250,
-    height: 300,
+    width: cardWidth,
+    height: cardWidth * 1.2,
     borderWidth: 5,
     borderColor: 'gold',
     justifyContent: 'center',
@@ -191,7 +251,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#222',
     borderRadius: 10,
     overflow: 'hidden',
-    marginTop: 20,
+    marginVertical: 15,
   },
   photo: {
     width: '100%',
@@ -203,35 +263,42 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   bottomRectangle: {
-    width: '90%',
+    width: cardWidth,
     height: 50,
     borderWidth: 2,
     borderColor: 'gold',
     color: 'gold',
     fontSize: 16,
     textAlign: 'center',
-    marginTop: 30,
+    marginVertical: 15,
     paddingHorizontal: 10,
+    borderRadius: 5,
   },
   colorButtonsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    marginTop: 30,
+    marginVertical: 15,
+    width: cardWidth,
   },
   colorButton: {
     width: 30,
     height: 30,
     borderRadius: 15,
     margin: 5,
+    borderWidth: 1,
+    borderColor: '#fff',
   },
   fontButtonsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    marginTop: 30,
+    marginVertical: 15,
+    width: cardWidth,
   },
   fontButton: {
-    width: 70,
-    height: 50,
+    width: cardWidth / 2.5,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     margin: 5,
@@ -239,51 +306,109 @@ const styles = StyleSheet.create({
   },
   fontButtonText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: 12,
   },
   saveButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#FF6347',
-    borderRadius: 5,
+    width: cardWidth,
+    marginVertical: 10,
+    padding: 15,
+    backgroundColor: '#4CAF50',
+    borderRadius: 10,
   },
   saveButtonText: {
     color: 'white',
     fontSize: 16,
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
-  linkButton: {
-    marginTop: 20,
+  cancelButton: {
+    width: cardWidth,
+    marginVertical: 10,
+    padding: 15,
+    backgroundColor: '#666',
+    borderRadius: 10,
   },
-  linkText: {
-    color: '#1E90FF',
-    fontSize: 14,
-    textDecorationLine: 'underline',
+  cancelButtonText: {
+    color: 'white',
+    fontSize: 16,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  savedCardsContainer: {
+    padding: 15,
+  },
+  savedCardsTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
+    textAlign: 'center',
   },
   savedCard: {
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    padding: 10,
+    width: cardWidth,
+    marginVertical: 10,
+    padding: 15,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: 'gold',
+    alignSelf: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  savedPhoto: {
+    width: '100%',
+    height: cardWidth * 0.8,
+    resizeMode: 'cover',
+    borderRadius: 5,
+    marginVertical: 10,
   },
   savedTitle: {
     fontSize: 20,
     color: 'gold',
     fontWeight: 'bold',
-  },
-  savedPhoto: {
-    width: 150,
-    height: 150,
-    resizeMode: 'cover',
-    marginTop: 10,
+    textAlign: 'center',
+    marginBottom: 10,
   },
   savedBottomText: {
     color: 'gold',
     fontSize: 16,
     textAlign: 'center',
+    marginVertical: 10,
+  },
+  cardButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 10,
+  },
+  editButton: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    marginRight: 5,
+  },
+  deleteButton: {
+    backgroundColor: '#F44336',
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    marginLeft: 5,
+  },
+  editButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  deleteButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
 });
 
