@@ -17,6 +17,7 @@ export default function BirthdayCard() {
   const [bottomText, setBottomText] = useState('Your Text Here');
   const [backgroundColor, setBackgroundColor] = useState('#000');
   const [fontFamily, setFontFamily] = useState('Arial'); // State for font family
+  const [savedCard, setSavedCard] = useState(null); // State to hold the saved card
 
   // Load saved data (photo, title, bottom text) from local storage
   useEffect(() => {
@@ -25,23 +26,36 @@ export default function BirthdayCard() {
       const savedTitle = await AsyncStorage.getItem('title');
       const savedBottomText = await AsyncStorage.getItem('bottomText');
       const savedFontFamily = await AsyncStorage.getItem('fontFamily');
+      const savedBackgroundColor = await AsyncStorage.getItem('backgroundColor');
 
       if (savedPhoto) setPhoto(savedPhoto);
       if (savedTitle) setTitle(savedTitle);
       if (savedBottomText) setBottomText(savedBottomText);
       if (savedFontFamily) setFontFamily(savedFontFamily);
+      if (savedBackgroundColor) setBackgroundColor(savedBackgroundColor);
     };
     loadData();
   }, []);
 
-  // Save data to local storage
+  // Save data to local storage and show popup message
   const saveData = async () => {
     try {
-      await AsyncStorage.setItem('photo', photo);
+      await AsyncStorage.setItem('photo', photo || ''); // Ensure photo is saved as an empty string if null
       await AsyncStorage.setItem('title', title);
       await AsyncStorage.setItem('bottomText', bottomText);
       await AsyncStorage.setItem('fontFamily', fontFamily);
-      Alert.alert('Success', 'Data saved successfully!');
+      await AsyncStorage.setItem('backgroundColor', backgroundColor);
+      
+      Alert.alert('Success', 'Card saved successfully!');
+      
+      // Update saved card state to show it on the left corner
+      setSavedCard({
+        photo: photo,
+        title: title,
+        bottomText: bottomText,
+        backgroundColor: backgroundColor,
+        fontFamily: fontFamily,
+      });
     } catch (error) {
       Alert.alert('Error', 'Failed to save data.');
     }
@@ -131,6 +145,21 @@ export default function BirthdayCard() {
       <TouchableOpacity style={styles.linkButton} onPress={() => Alert.alert('Link clicked!')}>
         <Text style={styles.linkText}>Click Here</Text>
       </TouchableOpacity>
+
+      {/* Display Saved Card on the left corner */}
+      {savedCard && (
+        <View style={[styles.savedCard, { backgroundColor: savedCard.backgroundColor }]}>
+          <Text style={[styles.savedTitle, { fontFamily: savedCard.fontFamily }]}>
+            {savedCard.title}
+          </Text>
+          {savedCard.photo && (
+            <Image source={{ uri: savedCard.photo }} style={styles.savedPhoto} />
+          )}
+          <Text style={[styles.savedBottomText, { fontFamily: savedCard.fontFamily }]}>
+            {savedCard.bottomText}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -230,7 +259,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textDecorationLine: 'underline',
   },
+  savedCard: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'gold',
+  },
+  savedTitle: {
+    fontSize: 20,
+    color: 'gold',
+    fontWeight: 'bold',
+  },
+  savedPhoto: {
+    width: 150,
+    height: 150,
+    resizeMode: 'cover',
+    marginTop: 10,
+  },
+  savedBottomText: {
+    color: 'gold',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 10,
+  },
 });
+
+
+
+
+
 
 
 
