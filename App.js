@@ -1,5 +1,5 @@
 import React from 'react';
-import BirthdayCard from './src/BirthdayCard'; // Adjust the path if needed
+import BirthdayCard from './src/BirthdayCard';
 
 export default function App() {
   return <BirthdayCard />;

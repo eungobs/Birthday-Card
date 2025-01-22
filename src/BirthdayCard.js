@@ -9,9 +9,20 @@ import {
   Alert,
   ScrollView,
   Dimensions,
+  Share,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { launchImageLibrary } from 'react-native-image-picker';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+// Get screen dimensions
+const { width, height } = Dimensions.get('window');
+
+// Helper function to scale sizes based on screen width
+const scaleSize = (size) => {
+  const scaleFactor = width / 360; // 360 is the base width for mobile design
+  return size * Math.min(scaleFactor, 1.5); // Limit scaling for larger screens
+};
 
 export default function BirthdayCard() {
   const [photo, setPhoto] = useState(null);
@@ -82,7 +93,6 @@ export default function BirthdayCard() {
       setSavedCards(updatedCards);
       setEditingCard(null);
       
-      // Reset form
       setPhoto(null);
       setTitle('Happy Birthday');
       setBottomText('Your Text Here');
@@ -109,15 +119,27 @@ export default function BirthdayCard() {
     }
   };
 
+  const handleShareCard = async (card) => {
+    try {
+      const message = `${card.title}\n${card.bottomText}`;
+      await Share.share({
+        message,
+        url: card.photo,
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to share card');
+    }
+  };
+
   const SavedCardComponent = ({ card }) => (
     <View style={[styles.savedCard, { backgroundColor: card.backgroundColor }]}>
-      <Text style={[styles.savedTitle, { fontFamily: card.fontFamily }]}>
+      <Text style={[styles.savedTitle, { fontFamily: card.fontFamily, fontSize: scaleSize(20) }]}>
         {card.title}
       </Text>
       {card.photo && (
         <Image source={{ uri: card.photo }} style={styles.savedPhoto} />
       )}
-      <Text style={[styles.savedBottomText, { fontFamily: card.fontFamily }]}>
+      <Text style={[styles.savedBottomText, { fontFamily: card.fontFamily, fontSize: scaleSize(16) }]}>
         {card.bottomText}
       </Text>
       <View style={styles.cardButtons}>
@@ -133,15 +155,21 @@ export default function BirthdayCard() {
         >
           <Text style={styles.deleteButtonText}>Delete</Text>
         </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.shareButton} 
+          onPress={() => handleShareCard(card)}
+        >
+          <Icon name="share" size={scaleSize(20)} color="white" />
+        </TouchableOpacity>
       </View>
     </View>
   );
 
   return (
-    <ScrollView style={styles.mainContainer}>
+    <ScrollView contentContainerStyle={styles.mainContainer}>
       <View style={[styles.container, { backgroundColor }]}>
         <TextInput
-          style={[styles.title, { fontFamily }]}
+          style={[styles.title, { fontFamily, fontSize: scaleSize(28) }]}
           value={title}
           onChangeText={setTitle}
           placeholder="Enter Title"
@@ -152,12 +180,12 @@ export default function BirthdayCard() {
           {photo ? (
             <Image source={{ uri: photo }} style={styles.photo} />
           ) : (
-            <Text style={styles.photoText}>Tap to add photo</Text>
+            <Text style={[styles.photoText, { fontSize: scaleSize(18) }]}>Tap to add photo</Text>
           )}
         </TouchableOpacity>
 
         <TextInput
-          style={[styles.bottomRectangle, { fontFamily }]}
+          style={[styles.bottomRectangle, { fontFamily, fontSize: scaleSize(16) }]}
           value={bottomText}
           onChangeText={setBottomText}
           placeholder="Enter bottom text"
@@ -184,7 +212,7 @@ export default function BirthdayCard() {
               style={[styles.fontButton, { backgroundColor: '#222' }]}
               onPress={() => setFontFamily(font)}
             >
-              <Text style={[styles.fontButtonText, { fontFamily: font }]}>{font}</Text>
+              <Text style={[styles.fontButtonText, { fontFamily: font, fontSize: scaleSize(12) }]}>{font}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -193,7 +221,7 @@ export default function BirthdayCard() {
           style={styles.saveButton} 
           onPress={saveData}
         >
-          <Text style={styles.saveButtonText}>
+          <Text style={[styles.saveButtonText, { fontSize: scaleSize(16) }]}>
             {editingCard ? 'Update Card' : 'Save New Card'}
           </Text>
         </TouchableOpacity>
@@ -203,13 +231,13 @@ export default function BirthdayCard() {
             style={styles.cancelButton} 
             onPress={() => setEditingCard(null)}
           >
-            <Text style={styles.cancelButtonText}>Cancel Edit</Text>
+            <Text style={[styles.cancelButtonText, { fontSize: scaleSize(16) }]}>Cancel Edit</Text>
           </TouchableOpacity>
         )}
       </View>
 
       <View style={styles.savedCardsContainer}>
-        <Text style={styles.savedCardsTitle}>Saved Cards</Text>
+        <Text style={[styles.savedCardsTitle, { fontSize: scaleSize(24) }]}>Saved Cards</Text>
         {savedCards.map((card) => (
           <SavedCardComponent key={card.id} card={card} />
         ))}
@@ -218,20 +246,21 @@ export default function BirthdayCard() {
   );
 }
 
-const { width } = Dimensions.get('window');
-const cardWidth = width * 0.9;
-
 const styles = StyleSheet.create({
   mainContainer: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#f5f5f5',
+    paddingVertical: 20,
+    maxWidth: 500, // Limit maximum width for desktop
+    alignSelf: 'center', // Center the container on larger screens
+    width: '100%',
   },
   container: {
     alignItems: 'center',
     padding: 20,
+    width: '100%',
   },
   title: {
-    fontSize: 28,
     color: 'gold',
     fontWeight: 'bold',
     textAlign: 'center',
@@ -239,11 +268,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'gold',
     paddingHorizontal: 10,
-    width: '100%',
+    width: '90%',
   },
   photoFrame: {
-    width: cardWidth,
-    height: cardWidth * 1.2,
+    width: '90%',
+    aspectRatio: 1, // Maintain a square aspect ratio
     borderWidth: 5,
     borderColor: 'gold',
     justifyContent: 'center',
@@ -260,15 +289,13 @@ const styles = StyleSheet.create({
   },
   photoText: {
     color: 'gold',
-    fontSize: 18,
   },
   bottomRectangle: {
-    width: cardWidth,
+    width: '90%',
     height: 50,
     borderWidth: 2,
     borderColor: 'gold',
     color: 'gold',
-    fontSize: 16,
     textAlign: 'center',
     marginVertical: 15,
     paddingHorizontal: 10,
@@ -279,7 +306,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     marginVertical: 15,
-    width: cardWidth,
+    width: '90%',
   },
   colorButton: {
     width: 30,
@@ -294,10 +321,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     marginVertical: 15,
-    width: cardWidth,
+    width: '90%',
   },
   fontButton: {
-    width: cardWidth / 2.5,
+    width: '45%',
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
@@ -306,10 +333,9 @@ const styles = StyleSheet.create({
   },
   fontButtonText: {
     color: 'white',
-    fontSize: 12,
   },
   saveButton: {
-    width: cardWidth,
+    width: '90%',
     marginVertical: 10,
     padding: 15,
     backgroundColor: '#4CAF50',
@@ -317,12 +343,11 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     color: 'white',
-    fontSize: 16,
     textAlign: 'center',
     fontWeight: 'bold',
   },
   cancelButton: {
-    width: cardWidth,
+    width: '90%',
     marginVertical: 10,
     padding: 15,
     backgroundColor: '#666',
@@ -330,22 +355,21 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: 'white',
-    fontSize: 16,
     textAlign: 'center',
     fontWeight: 'bold',
   },
   savedCardsContainer: {
     padding: 15,
+    width: '100%',
   },
   savedCardsTitle: {
-    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 15,
     textAlign: 'center',
   },
   savedCard: {
-    width: cardWidth,
+    width: '90%',
     marginVertical: 10,
     padding: 15,
     borderRadius: 10,
@@ -363,13 +387,12 @@ const styles = StyleSheet.create({
   },
   savedPhoto: {
     width: '100%',
-    height: cardWidth * 0.8,
+    aspectRatio: 1,
     resizeMode: 'cover',
     borderRadius: 5,
     marginVertical: 10,
   },
   savedTitle: {
-    fontSize: 20,
     color: 'gold',
     fontWeight: 'bold',
     textAlign: 'center',
@@ -377,7 +400,6 @@ const styles = StyleSheet.create({
   },
   savedBottomText: {
     color: 'gold',
-    fontSize: 16,
     textAlign: 'center',
     marginVertical: 10,
   },
@@ -400,6 +422,14 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 5,
   },
+  shareButton: {
+    backgroundColor: '#2196F3',
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    marginLeft: 5,
+    alignItems: 'center',
+  },
   editButtonText: {
     color: 'white',
     textAlign: 'center',
@@ -411,11 +441,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-
-
-
-
-
-
-
