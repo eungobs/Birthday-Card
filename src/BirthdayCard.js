@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   },
   editButton: {
     backgroundColor: '#4CAF50',
-    padding: 10,
+    padding: 6,
     borderRadius: 5,
     flex: 1,
     marginRight: 5,
@@ -448,11 +448,12 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     fontWeight: 'bold',
+    fontSize: scaleSize(8), // Smaller text size
   },
   deleteButton: {
     backgroundColor: '#F44336',
-    padding: 10,
-    borderRadius: 5,
+    padding: 6,
+    borderRadius: 2,
     flex: 1,
     marginLeft: 5,
   },
@@ -460,10 +461,11 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     fontWeight: 'bold',
+   fontSize: scaleSize(7),
   },
   shareButton: {
-    backgroundColor: '#2196F3',
-    padding: 10,
+    backgroundColorS: '#2196F3',
+    padding: 6,
     borderRadius: 5,
     flex: 1,
     marginLeft: 5,
