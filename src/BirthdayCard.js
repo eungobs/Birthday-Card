@@ -10,9 +10,10 @@ import {
   ScrollView,
   Dimensions,
   Share,
+  FlatList,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker'; // Use expo-image-picker for iOS
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Get screen dimensions
@@ -33,6 +34,7 @@ export default function BirthdayCard() {
   const [savedCards, setSavedCards] = useState([]);
   const [editingCard, setEditingCard] = useState(null);
 
+  // Load saved cards from AsyncStorage on component mount
   useEffect(() => {
     const loadSavedCards = async () => {
       try {
@@ -47,6 +49,7 @@ export default function BirthdayCard() {
     loadSavedCards();
   }, []);
 
+  // Populate form fields when editing a card
   useEffect(() => {
     if (editingCard) {
       setPhoto(editingCard.photo);
@@ -57,18 +60,31 @@ export default function BirthdayCard() {
     }
   }, [editingCard]);
 
-  const selectPhoto = () => {
-    launchImageLibrary({ mediaType: 'photo' }, (response) => {
-      if (response.didCancel) return;
-      if (response.errorCode) {
-        Alert.alert('Error', response.errorMessage);
-        return;
-      }
-      const uri = response.assets[0]?.uri;
-      setPhoto(uri);
+  // Open image library to select a photo
+  const selectPhoto = async () => {
+    // Request permissions
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'You need to grant storage permissions to upload images.');
+      return;
+    }
+
+    // Launch the image library
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1], // Square aspect ratio
+      quality: 1,
     });
+
+    console.log('Image Picker Result:', result); // Debugging
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      setPhoto(uri);
+    }
   };
 
+  // Save or update a card
   const saveData = async () => {
     try {
       const newCard = {
@@ -82,7 +98,7 @@ export default function BirthdayCard() {
 
       let updatedCards;
       if (editingCard) {
-        updatedCards = savedCards.map(card => 
+        updatedCards = savedCards.map((card) =>
           card.id === editingCard.id ? newCard : card
         );
       } else {
@@ -92,26 +108,29 @@ export default function BirthdayCard() {
       await AsyncStorage.setItem('savedCards', JSON.stringify(updatedCards));
       setSavedCards(updatedCards);
       setEditingCard(null);
-      
+
+      // Reset form fields
       setPhoto(null);
       setTitle('Happy Birthday');
       setBottomText('Your Text Here');
       setBackgroundColor('#000');
       setFontFamily('Arial');
-      
+
       Alert.alert('Success', 'Card saved successfully!');
     } catch (error) {
       Alert.alert('Error', 'Failed to save card');
     }
   };
 
+  // Edit a saved card
   const handleEditCard = (card) => {
     setEditingCard(card);
   };
 
+  // Delete a saved card
   const handleDeleteCard = async (cardId) => {
     try {
-      const updatedCards = savedCards.filter(card => card.id !== cardId);
+      const updatedCards = savedCards.filter((card) => card.id !== cardId);
       await AsyncStorage.setItem('savedCards', JSON.stringify(updatedCards));
       setSavedCards(updatedCards);
     } catch (error) {
@@ -119,6 +138,7 @@ export default function BirthdayCard() {
     }
   };
 
+  // Share a saved card
   const handleShareCard = async (card) => {
     try {
       const message = `${card.title}\n${card.bottomText}`;
@@ -131,6 +151,7 @@ export default function BirthdayCard() {
     }
   };
 
+  // Render a saved card
   const SavedCardComponent = ({ card }) => (
     <View style={[styles.savedCard, { backgroundColor: card.backgroundColor }]}>
       <Text style={[styles.savedTitle, { fontFamily: card.fontFamily, fontSize: scaleSize(20) }]}>
@@ -143,20 +164,20 @@ export default function BirthdayCard() {
         {card.bottomText}
       </Text>
       <View style={styles.cardButtons}>
-        <TouchableOpacity 
-          style={styles.editButton} 
+        <TouchableOpacity
+          style={styles.editButton}
           onPress={() => handleEditCard(card)}
         >
           <Text style={styles.editButtonText}>Edit</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.deleteButton} 
+        <TouchableOpacity
+          style={styles.deleteButton}
           onPress={() => handleDeleteCard(card.id)}
         >
           <Text style={styles.deleteButtonText}>Delete</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.shareButton} 
+        <TouchableOpacity
+          style={styles.shareButton}
           onPress={() => handleShareCard(card)}
         >
           <Icon name="share" size={scaleSize(20)} color="white" />
@@ -217,8 +238,8 @@ export default function BirthdayCard() {
           ))}
         </View>
 
-        <TouchableOpacity 
-          style={styles.saveButton} 
+        <TouchableOpacity
+          style={styles.saveButton}
           onPress={saveData}
         >
           <Text style={[styles.saveButtonText, { fontSize: scaleSize(16) }]}>
@@ -227,8 +248,8 @@ export default function BirthdayCard() {
         </TouchableOpacity>
 
         {editingCard && (
-          <TouchableOpacity 
-            style={styles.cancelButton} 
+          <TouchableOpacity
+            style={styles.cancelButton}
             onPress={() => setEditingCard(null)}
           >
             <Text style={[styles.cancelButtonText, { fontSize: scaleSize(16) }]}>Cancel Edit</Text>
@@ -238,21 +259,27 @@ export default function BirthdayCard() {
 
       <View style={styles.savedCardsContainer}>
         <Text style={[styles.savedCardsTitle, { fontSize: scaleSize(24) }]}>Saved Cards</Text>
-        {savedCards.map((card) => (
-          <SavedCardComponent key={card.id} card={card} />
-        ))}
+        <FlatList
+          horizontal
+          data={savedCards}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <SavedCardComponent card={item} />}
+          contentContainerStyle={styles.savedCardsList}
+          showsHorizontalScrollIndicator={false}
+        />
       </View>
     </ScrollView>
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
   mainContainer: {
     flexGrow: 1,
     backgroundColor: '#f5f5f5',
     paddingVertical: 20,
-    maxWidth: 500, // Limit maximum width for desktop
-    alignSelf: 'center', // Center the container on larger screens
+    maxWidth: 500,
+    alignSelf: 'center',
     width: '100%',
   },
   container: {
@@ -272,7 +299,7 @@ const styles = StyleSheet.create({
   },
   photoFrame: {
     width: '90%',
-    aspectRatio: 1, // Maintain a square aspect ratio
+    aspectRatio: 1,
     borderWidth: 5,
     borderColor: 'gold',
     justifyContent: 'center',
@@ -368,14 +395,16 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
   },
+  savedCardsList: {
+    paddingHorizontal: 10,
+  },
   savedCard: {
-    width: '90%',
-    marginVertical: 10,
+    width: 200,
+    marginHorizontal: 10,
     padding: 15,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: 'gold',
-    alignSelf: 'center',
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: {
@@ -415,12 +444,22 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 5,
   },
+  editButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
   deleteButton: {
     backgroundColor: '#F44336',
     padding: 10,
     borderRadius: 5,
     flex: 1,
     marginLeft: 5,
+  },
+  deleteButtonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
   shareButton: {
     backgroundColor: '#2196F3',
@@ -429,15 +468,5 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 5,
     alignItems: 'center',
-  },
-  editButtonText: {
-    color: 'white',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  deleteButtonText: {
-    color: 'white',
-    textAlign: 'center',
-    fontWeight: 'bold',
   },
 });
