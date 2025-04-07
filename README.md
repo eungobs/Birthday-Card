@@ -1,91 +1,108 @@
-Birthday Card Creator
-This React Native project enables users to design personalized birthday cards with custom text, photo uploads, and a golden-themed design. The application is available for web and mobile platforms and provides persistent storage for user inputs.
+# Birthday Card Creator
 
-Features
-Editable Text
+## Overview
 
-Title: Editable text at the top of the card.
-Bottom Text: Editable text at the bottom of the card.
-Text changes are saved locally for session persistence.
-Photo Upload
+The **Birthday Card Creator** is a fun and easy-to-use mobile and web application that lets you design personalized birthday cards. You can add custom text, upload photos, and choose from a beautiful golden-themed design. The app is perfect for creating unique birthday greetings that you can share with friends and family!
 
-Users can upload and display a photo from their gallery within a decorative frame.
-Custom Design
+## Key Features
 
-A sleek golden theme with an elegant logo (by.ee ndzukule) in a circular frame.
-Persistent Storage
+1. **Editable Text**: 
+   - **Title**: You can easily change the title text at the top of the card (like changing “Happy Birthday” to something special).
+   - **Bottom Text**: The text at the bottom of the card can also be customized.
+   - The app automatically saves your changes, so you don't need to worry about losing them during your session.
 
-Card customizations (photo, title, bottom text) are saved using AsyncStorage to ensure changes are retained.
-Multi-Platform Support
+2. **Photo Upload**: 
+   - Users can upload a photo from their device's gallery and place it within a decorative frame on the card. This personal touch makes the card even more special!
 
-Compatible with web, Android, and iOS platforms. The app can be run in a browser or scanned for use on mobile devices via the Expo app.
-How to Use
-Editing Text
+3. **Custom Design**: 
+   - The app boasts a sleek golden theme, giving your card an elegant look. There’s also a stylish logo designed by Elizabeth Eunice Ndzukule.
 
-Edit Title: Tap on the title (Happy Birthday) at the top of the card. Type your desired text. The app automatically saves and displays the update.
-Edit Bottom Text: Tap on the bottom text (Your Text Here) at the bottom of the card. Type your desired text. The app saves and displays the update instantly.
-Adding a Photo
+4. **Persistent Storage**: 
+   - Any changes you make (like the photo, title, and bottom text) will be saved using a feature called AsyncStorage. This means your customizations will be retained even if you leave the app.
 
-Tap on the photo frame in the middle of the card. Select an image from your device gallery. The selected image will appear in the frame.
-Running the App
-Run on the web:
+5. **Multi-Platform Support**: 
+   - The app works on web browsers as well as on Android and iOS devices. You can create cards right in a browser or use your phone by scanning a QR code.
 
-npm run web
-Alternatively, start the project:
+## How to Use the App
 
-npm start
-Open the Expo Developer Tools in your browser and scan the QR code using the Expo Go app for Android/iOS devices.
-Installation and Setup
-Clone the Repository
+### Editing Text
+- **Edit Title**: Tap on the title at the top of your card (which says “Happy Birthday”). You can type in your preferred text, and the app will save and show your update immediately.
+  
+- **Edit Bottom Text**: Tap on the bottom text area (where it says “Your Text Here”). Enter your custom message, and watch it save and update instantly!
 
-To get the project, clone it from GitHub:
+### Adding a Photo
+- To add a photo, tap on the decorative photo frame in the center of the card. You’ll be able to select an image from your device’s gallery. Once you choose a photo, it will appear nicely within the frame.
 
-git clone https://github.com/eungobs/Birthday-Card.git
-cd Birthday-Card
-Install Dependencies
+## Running the App
 
-Install the blank Expo template (if not already done):
+If you want to use the app on the web or on your mobile device, follow these simple steps:
 
-npx create-expo-app card --template blank
-Install required dependencies:
+### For Web:
+- To run the app in a web browser, type this command:
+ 
+  npm run web
 
-AsyncStorage:
+### For Mobile:
+1. To start the project, type:
+ 
+   npm start
 
-npx expo install @react-native-async-storage/async-storage
-Image Picker:
+2. Open the Expo Developer Tools that will appear in your browser.
+3. Use the Expo Go app on your iOS or Android device to scan the QR code displayed in your browser. This will allow you to use the app on your mobile device.
 
-npx expo install react-native-image-picker
-Start the Project
+## Installation and Setup
 
-For the web:
+To get everything set up on your computer, follow these steps:
 
-npm run web
-For mobile devices: Start the project:
+1. **Clone the Repository**: Download the app's source code from GitHub. Open your terminal and type:
 
-npm start
-Scan the QR code displayed in the Expo Developer Tools using the Expo Go app.
+   git clone https://github.com/eungobs/Birthday-Card.git
+   cd Birthday-Card
+  
 
-Dependencies
-The project is built with the following key libraries:
+2. **Install Dependencies**: Make sure you have the blank Expo template installed. If you haven’t done it yet, type:
 
-React Native: Core framework for building the app.
-Expo: Tools and APIs for running the app.
-@react-native-async-storage/async-storage: Manages local data storage for user inputs.
-react-native-image-picker: Facilitates photo selection from the user's gallery.
-Troubleshooting
-Image Picker Not Working: Ensure react-native-image-picker is installed:
+   npx create-expo-app card --template blank
 
-npx expo install react-native-image-picker
-Grant necessary permissions for gallery access.
 
-Persistent Storage Issues: Verify that @react-native-async-storage/async-storage is correctly installed:
+3. **Install Required Dependencies**: Next, install these essential tools:
+   - For AsyncStorage (to save data locally):
+  
+     npx expo install @react-native-async-storage/async-storage
+  
+   - For the Image Picker (to choose photos):
+   
+     npx expo install react-native-image-picker
+   
 
-npx expo install @react-native-async-storage/async-storage
-Expo Go Issues: Ensure both your phone and computer are on the same Wi-Fi network to scan the QR code.
+4. **Start the Project**:
+   - For the web, type:
+   
+     npm run web
+    
+   - For mobile devices, start the project by typing:
+    
+     npm start
+   
+   - Then scan the QR code to access it on your phone.
 
-Author
-Designed and implemented by Elizabeth Eunice Ndzukule.
+## Troubleshooting
 
-For any questions or contributions, please visit the GitHub repository:
+If you run into any issues, here are some tips:
+- **Image Picker Not Working**: Make sure you have installed the react-native-image-picker correctly. You can check this by running:
 
-Birthday Card GitHub Repository
+  npx expo install react-native-image-picker
+
+  Also, ensure that you have granted any necessary permissions for access to your gallery.
+
+- **Persistent Storage Issues**: Confirm that AsyncStorage was installed correctly:
+
+  npx expo install @react-native-async-storage/async-storage
+
+
+- **Expo Go Issues**: Make sure that both your phone and your computer are connected to the same Wi-Fi network to scan the QR code.
+
+## Author 
+
+This app was designed and developed by **Elizabeth Eunice Ndzukule**. For any questions or contributions, feel free to visit the project’s GitHub repository where you can find additional information and resources: [Birthday Card GitHub Repository](https://github.com/eungobs/Birthday-Card.git).
+
